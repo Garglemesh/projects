@@ -1,1 +1,113 @@
+public class SunnovaSystemProjectsApi {
 
+   //This makes the method asynchronous
+   @future(callout=true)
+   
+   public static void getMyArticles(String spi, String sid) {
+   
+   //Instantiate our Sunnova object and find the one that just got created
+   Sunnova_Api_Object__c sunnovaList= new Sunnova_Api_Object__c();
+    
+    //Instantiate variable holders
+    String systemProjectsId = spi;
+    String sunnovaProjectId = sid;
+    
+    //Set values from webhook
+    sunnovaList.Name = systemProjectsId;
+    sunnovaList.Sunnova_Project_ID__c= sunnovaProjectId ;
+    
+    //Credentials
+    String auth='am9zZXBoY2hlbkBnbWFpbC5jb206Unc1NTEwMzUyNzE=';
+    String token='token';
+    
+    String requestEndPoint='https://dealerapi.sunnova.com/services/v1.0/authentication';
+
+
+    //GET token from credentials
+    Http httpAuth=new Http();
+    HttpRequest requestAuth=new HttpRequest();
+    requestAuth.setEndPoint(requestEndPoint);
+    requestAuth.setMethod('GET');
+    requestAuth.setHeader('Authorization', 'Basic ' + auth);
+    HttpResponse responseAuth=httpAuth.send(requestAuth);   
+    
+    if(responseAuth.getStatusCode()==200)
+    {
+    //System.Debug(JSON.deserializeUntyped(responseAuth.getBody()));
+    
+    //Gets the token from our auth GET
+    Map<String,Object> resultsAuth=(Map<String,Object>)JSON.deserializeUntyped(responseAuth.getBody());
+    token=String.valueOf(resultsAuth.get('token'));
+    
+    }
+    else
+    {
+    System.debug('ERROR: COULD NOT AUTHORIZE CREDENTIALS');
+    //Error handling (for pages, irrelevant, needs work)
+    //ApexPages.Message myMsg=new ApexPages.Message(ApexPages.Severity.Error,'Error: Could not authorize credentials');
+    //ApexPages.addMessage(myMsg);
+    }
+    
+    //Define endpoint for GET API
+    requestEndPoint='https://dealerapi.sunnova.com/services/v1.0/systemprojects/';      
+    requestEndPoint+=spi;                                               
+    
+    //get SystemProjectsId data via GET API
+    Http http=new Http();
+    HttpRequest request=new HttpRequest();
+    request.setEndPoint(requestEndPoint);
+    request.setMethod('GET');
+    request.setHeader('Authorization', 'Bearer ' + token);
+    HttpResponse response=http.send(request);
+    
+    //Parse HTTP response, assign values
+    if(response.getStatusCode()==200)
+    {
+    
+    //This turns the "list" of JSONs to a single map if needed aka [ JSON ] (Required for testing with Leads ID)
+    /*List<Map<String, Object>> myMaps = new List<Map<String, Object>>();
+    List<Object> myMapObjects = (List<Object>) JSON.deserializeUntyped(response.getBody());
+    for (Object obj : myMapObjects) {
+        myMaps.add((Map<String, Object>)obj);
+    }
+    System.debug(response.getBody());   
+    Map<String,Object> results = myMaps[0];*/
+    
+    //This turns the JSON into a map if allowable
+    Map<String,Object> results = (Map<String,Object>) JSON.deserializeUntyped(response.getBody());
+    
+    
+    //Get "Partner_Payment_Details" section of JSON
+    Map<String,Object> partnerResults= (Map<String,Object>)(results.get('Partner_Payment_Details'));
+    
+    //Get "NTP" subsection, pass Payment_Amount
+    Map<String,Object> ntpResults= (Map<String,Object>)(partnerResults.get('NTP'));
+    sunnovaList.NTP__c=Decimal.valueOf(String.valueOf(ntpResults.get('Payment_Amount'))); 
+    
+    //**sunnovaList.CO_Pre_Install__c=Decimal.valueOf(String.valueOf(results.get('changeOrderPre')));
+    //**sunnovaList.CO_Post_Install__c=Decimal.valueOf(String.valueOf(results.get('changeOrderPost')));
+    
+    //Get "Substantial" subsection, pass Payment_Amount
+    Map<String,Object> subsResults= (Map<String,Object>)(partnerResults.get('Substantial'));
+    sunnovaList.Substantial__c=Decimal.valueOf(String.valueOf(subsResults.get('Payment_Amount')));
+    
+    //Get "Final" subsection, pass Payment_Amount
+    Map<String,Object> finalResults= (Map<String,Object>)(partnerResults.get('Final'));
+    sunnovaList.Final__c=Decimal.valueOf(String.valueOf(finalResults.get('Payment_Amount')));
+    
+    
+    }
+    else
+    {
+    System.debug('ERROR: COULD NOT READ DATA');
+    //Error handling (for pages, irrelevant, needs work)
+    //ApexPages.Message myMsg=new ApexPages.Message(ApexPages.Severity.Error,'There was an error in reading Data');
+    //ApexPages.addMessage(myMsg);
+    }
+    
+
+    insert sunnovaList;
+      
+  }
+
+}
