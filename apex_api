@@ -17,7 +17,7 @@ public class SunnovaSystemProjectsApi {
     sunnovaList.Sunnova_Project_ID__c= sunnovaProjectId ;
     
     //Credentials
-    String auth='am9zZXBoY2hlbkBnbWFpbC5jb206Unc1NTEwMzUyNzE=';
+    String auth='thisisdefinitelyencrypted';
     String token='token';
     
     String requestEndPoint='https://dealerapi.sunnova.com/services/v1.0/authentication';
