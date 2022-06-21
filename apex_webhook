@@ -1,10 +1,10 @@
 @RestResource(urlMapping='/webhook') //could be any path name
-global class SunnovaSystemProjectsWebhook {  
+global class SystemProjectsWebhook {  
     @HttpPost
     global static void doPost(
     string Id, 
     string System_Project_id, 
-    string Sunnova_Id, 
+    string Company_Id, 
     string Lead_Quote_Id, 
     string LeadSource, 
     string Is_Converted, 
@@ -17,7 +17,7 @@ global class SunnovaSystemProjectsWebhook {
     string State, 
     string ID_Ext) {
     
-    SunnovaSystemProjectsApi.getMyArticles(System_Project_id, Sunnova_Id);
+    SystemProjectsApi.getMyArticles(System_Project_id, Company_Id);
    
     }
 }
